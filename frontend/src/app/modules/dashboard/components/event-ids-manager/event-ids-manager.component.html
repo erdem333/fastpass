@@ -1,0 +1,57 @@
+<div class="event-ids-container">
+  <div class="ids-header">
+    <h2>Event IDs</h2>
+    <p class="subtitle" *ngIf="platform">{{ platform.name }}</p>
+    <p class="subtitle empty" *ngIf="!platform">Select a platform</p>
+  </div>
+
+  <div class="ids-empty" *ngIf="!platform">
+    <p>👈 Choose a platform from the left to manage its event IDs</p>
+  </div>
+
+  <div class="ids-content" *ngIf="platform">
+    <div class="add-id-form">
+      <input 
+        type="text" 
+        [(ngModel)]="newEventId"
+        (keypress)="onKeyPress($event)"
+        placeholder="Enter event ID..."
+        class="id-input"
+        [disabled]="isLoading"
+      >
+      <button 
+        class="btn-primary"
+        (click)="addEventId()"
+        [disabled]="isLoading"
+      >
+        Add
+      </button>
+    </div>
+
+    <div *ngIf="error" class="alert alert-error">
+      {{ error }}
+    </div>
+
+    <div class="ids-list">
+      <div *ngIf="eventIds.length === 0" class="no-ids">
+        <p>No event IDs configured yet</p>
+      </div>
+
+      <div *ngFor="let eventId of eventIds" class="id-item">
+        <span class="id-value">{{ eventId }}</span>
+        <button 
+          class="btn-remove"
+          (click)="removeEventId(eventId)"
+          [disabled]="isLoading"
+          title="Remove"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <div class="ids-stats">
+      <p>Total: <strong>{{ eventIds.length }}</strong> event IDs</p>
+    </div>
+  </div>
+</div>

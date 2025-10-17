@@ -1,0 +1,15 @@
+<header class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <h2>🚀 FastPass</h2>
+    </div>
+    <div class="navbar-menu" *ngIf="isLoggedIn">
+      <span class="user-info">{{ currentUser?.username }}</span>
+      <button class="btn-secondary" (click)="logout()">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <router-outlet></router-outlet>
+</main>

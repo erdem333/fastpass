@@ -1,0 +1,53 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>🚀 FastPass</h1>
+      <p class="subtitle">Event Monitor Configuration Platform</p>
+    </div>
+
+    <div class="login-content">
+      <h2>Welcome!</h2>
+      <p class="description">
+        Sign in with Discord to configure your event monitors.
+      </p>
+
+      <div *ngIf="error" class="alert alert-error">
+        {{ error }}
+      </div>
+
+      <div *ngIf="isProcessing" class="processing-message">
+        <div class="spinner"></div>
+        <p>Authenticating with Discord...</p>
+      </div>
+
+      <button 
+        *ngIf="!isProcessing"
+        class="btn-discord"
+        (click)="loginWithDiscord()"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <img src="https://discord.com/assets/3437c10597c1526c3dbd98e50a0b1d9d.svg" alt="Discord" class="discord-icon">
+          Sign in with Discord
+        </span>
+        <span *ngIf="isLoading">
+          Connecting...
+        </span>
+      </button>
+
+      <div class="info-box">
+        <h3>About FastPass</h3>
+        <ul>
+          <li>✅ Monitor multiple ticketing platforms</li>
+          <li>✅ Easily configure event IDs</li>
+          <li>✅ Custom webhook settings</li>
+          <li>✅ Your configuration is automatically saved</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="login-footer">
+      <p>© 2025 FastPass - All rights reserved</p>
+    </footer>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<div class="platforms-container">
+  <div class="platforms-header">
+    <h2>Platforms</h2>
+    <p class="subtitle">Select a platform to configure</p>
+  </div>
+
+  <div class="platforms-controls">
+    <div class="category-selector">
+      <button 
+        *ngFor="let cat of categories"
+        [class.active]="selectedCategory === cat"
+        (click)="selectedCategory = cat; loadPlatforms()"
+        class="category-btn"
+      >
+        {{ cat | titlecase }}
+      </button>
+    </div>
+
+    <input 
+      type="text" 
+      [(ngModel)]="searchQuery"
+      placeholder="Search platforms..."
+      class="search-input"
+    >
+  </div>
+
+  <div class="platforms-list" *ngIf="!isLoading">
+    <div 
+      *ngFor="let platform of (platforms$ | async)"
+      [class.active]="isActive(platform)"
+      (click)="selectPlatform(platform)"
+      class="platform-item card"
+    >
+      <div class="platform-info">
+        <h3>{{ platform.name }}</h3>
+        <p class="country">{{ platform.country }}</p>
+      </div>
+      <div class="platform-badge">
+        <span class="badge">{{ getEventIdCount(platform._id) }} IDs</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading platforms...</p>
+  </div>
+</div>

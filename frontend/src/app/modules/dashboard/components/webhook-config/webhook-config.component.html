@@ -1,0 +1,122 @@
+<div class="webhook-container">
+  <div class="webhook-header">
+    <h2>Webhooks</h2>
+    <p class="subtitle" *ngIf="platform">{{ platform.name }}</p>
+    <p class="subtitle empty" *ngIf="!platform">Select a platform</p>
+  </div>
+
+  <div class="webhook-empty" *ngIf="!platform">
+    <p>👈 Choose a platform from the left to configure webhooks</p>
+  </div>
+
+  <div class="webhook-content" *ngIf="platform">
+    <div *ngIf="error" class="alert alert-error">
+      {{ error }}
+    </div>
+
+    <div *ngIf="success" class="alert alert-success">
+      {{ success }}
+    </div>
+
+    <div class="webhook-form">
+      <div class="form-group">
+        <label>Preset Name</label>
+        <input 
+          type="text" 
+          [(ngModel)]="presetName"
+          placeholder="e.g., My Discord Webhook"
+          [disabled]="isSaving"
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Webhook URL</label>
+        <input 
+          type="text" 
+          [(ngModel)]="webhookUrl"
+          placeholder="https://discord.com/api/webhooks/..."
+          [disabled]="isSaving"
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Color (Hex Code)</label>
+        <div class="color-input-group">
+          <input 
+            type="text" 
+            [(ngModel)]="color"
+            placeholder="#5b9cf5"
+            [disabled]="isSaving"
+            maxlength="7"
+          >
+          <input 
+            type="color" 
+            [(ngModel)]="color"
+            [disabled]="isSaving"
+          >
+        </div>
+        <div class="color-presets">
+          <button 
+            *ngFor="let preset of ['#5b9cf5', '#5fdd9d', '#f55857', '#ffb84d']"
+            (click)="testColor(preset)"
+            [style.backgroundColor]="preset"
+            class="color-preset"
+            [title]="preset"
+          ></button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Footer Text</label>
+        <input 
+          type="text" 
+          [(ngModel)]="footerText"
+          placeholder="e.g., Powered by FastPass"
+          [disabled]="isSaving"
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Logo URL (Optional)</label>
+        <input 
+          type="url" 
+          [(ngModel)]="logoUrl"
+          placeholder="https://example.com/logo.png"
+          [disabled]="isSaving"
+        >
+      </div>
+    </div>
+
+    <div class="webhook-preview">
+      <h3>Preview</h3>
+      <div class="embed-preview" [style.borderLeftColor]="color">
+        <div class="embed-header">
+          <strong>{{ presetName || 'Webhook Preview' }}</strong>
+        </div>
+        <div class="embed-content">
+          <p>This is how your webhook message will look in Discord</p>
+        </div>
+        <div class="embed-footer">
+          <span>{{ footerText || 'No footer text' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="webhook-actions">
+      <button 
+        class="btn-primary"
+        (click)="saveWebhook()"
+        [disabled]="isSaving"
+      >
+        {{ isSaving ? 'Saving...' : 'Save Configuration' }}
+      </button>
+      <button 
+        class="btn-secondary"
+        (click)="clearWebhook()"
+        [disabled]="isSaving"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+</div>
