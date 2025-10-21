@@ -28,8 +28,19 @@ const allowedOrigins = [
   // Add any other allowed origins here
 ].filter(url => url); // Remove empty/undefined entries
 
-console.log('✅ CORS Configuration:');
-console.log('   Allowed Origins:', allowedOrigins);
+console.log('');
+console.log('╔════════════════════════════════════════════════════╗');
+console.log('║         CORS CONFIGURATION                         ║');
+console.log('╚════════════════════════════════════════════════════╝');
+console.log('FRONTEND_URL env var:', frontendUrl ? '✅ SET' : '❌ NOT SET');
+if (frontendUrl) {
+  console.log('  Value:', frontendUrl);
+} else {
+  console.warn('  ⚠️  FRONTEND_URL not set! Only localhost allowed.');
+}
+console.log('');
+console.log('Allowed Origins:', allowedOrigins);
+console.log('');
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -44,7 +55,7 @@ app.use(cors({
       callback(null, true);
     } else {
       console.warn(`❌ CORS blocked origin: ${origin}`);
-      console.warn(`   Expected one of: ${allowedOrigins.join(', ')}`);
+      console.warn(`   Allowed: ${allowedOrigins.join(', ')}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
