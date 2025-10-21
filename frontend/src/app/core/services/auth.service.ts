@@ -30,7 +30,7 @@ export class AuthService {
       const origin = window.location.origin;
       
       // If we're in production on Railway, backend will be on same origin path or different domain
-      // First try: check if there's a BACKEND_URL in localStorage (could be set from config)
+      // First try: check if there's a BACKEND_URL in sessionStorage (could be set from config)
       const storedBackendUrl = sessionStorage.getItem('backendUrl');
       if (storedBackendUrl) {
         return storedBackendUrl;
@@ -38,11 +38,12 @@ export class AuthService {
       
       // Default behavior:
       // - Local dev: http://localhost:3000/api
-      // - Railway: use same domain structure or relative path
+      // - Railway (if frontend proxies): /api
+      // - Railway (if separate services): use full URL from sessionStorage or detect
       if (origin.includes('localhost')) {
         return 'http://localhost:3000/api';
       } else {
-        // On Railway production, try relative API calls first
+        // Production on Railway - Frontend server proxies /api calls to backend
         return '/api';
       }
     }
