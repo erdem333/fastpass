@@ -9,40 +9,70 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
-// Serve static files from Angular build
-const distPath = path.join(__dirname, 'dist/fastpass-frontend');
-app.use(express.static(distPath));
+// Middleware to parse JSON bodies
+app.use(express.json());
 
-// API proxy middleware
+// API proxy middleware - MUST be BEFORE static files!
 app.use('/api', async (req, res) => {
   try {
-    const url = new URL(req.url, BACKEND_URL);
-    const response = await fetch(url.toString(), {
+    // Construct the backend URL correctly
+    const backendUrl = `${BACKEND_URL}${req.originalUrl}`;
+    
+    console.log(`[PROXY] ${req.method} ${req.originalUrl} → ${backendUrl}`);
+    
+    const fetchOptions = {
       method: req.method,
       headers: {
-        ...req.headers,
-        'Content-Type': 'application/json'
-      },
-      body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined
-    });
+        // Forward headers but remove host to avoid issues
+        ...Object.fromEntries(
+          Object.entries(req.headers).filter(([key]) => 
+            !['host', 'connection'].includes(key.toLowerCase())
+          )
+        )
+      }
+    };
 
-    const data = await response.text();
+    // Add body for POST/PUT/PATCH requests
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+      fetchOptions.body = JSON.stringify(req.body);
+      fetchOptions.headers['Content-Type'] = 'application/json';
+    }
+
+    const response = await fetch(backendUrl, fetchOptions);
+    const contentType = response.headers.get('content-type');
+    const data = contentType?.includes('application/json') 
+      ? await response.json() 
+      : await response.text();
+
     res.status(response.status);
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
+    res.set('Content-Type', contentType || 'application/json');
     res.send(data);
+    
+    console.log(`[PROXY] Response: ${response.status}`);
   } catch (error) {
-    console.error('API proxy error:', error);
-    res.status(500).json({ error: 'API request failed', details: error.message });
+    console.error('[PROXY] Error:', error.message);
+    res.status(502).json({ 
+      error: 'Bad Gateway', 
+      details: error.message,
+      backend: BACKEND_URL 
+    });
   }
 });
 
-// Fallback to index.html for Angular routing
+// Serve static files from Angular build (AFTER API proxy!)
+const distPath = path.join(__dirname, 'dist/fastpass-frontend');
+app.use(express.static(distPath));
+
+// Fallback to index.html for Angular routing (MUST be LAST!)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+  const indexPath = path.join(distPath, 'index.html');
+  console.log(`[STATIC] Serving ${req.path} → ${indexPath}`);
+  res.sendFile(indexPath);
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 FastPass Frontend running on http://localhost:${PORT}`);
   console.log(`📡 Backend URL: ${BACKEND_URL}`);
+  console.log(`📂 Static files: ${distPath}`);
 });
