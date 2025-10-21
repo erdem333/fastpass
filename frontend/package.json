@@ -6,9 +6,13 @@
     "start": "ng serve",
     "build": "ng build",
     "server": "node server.js",
-    "prod": "npm run build && npm run server"
+    "prod": "npm run build && npm run server",
+    "dev": "npm run server"
   },
   "private": true,
+  "engines": {
+    "node": "18.x || 20.x"
+  },
   "dependencies": {
     "@angular/animations": "^16.0.0",
     "@angular/common": "^16.0.0",
