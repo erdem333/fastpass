@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap, firstValueFrom } from 'rxjs/operators';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 export interface AppConfig {
@@ -27,7 +27,7 @@ export class ConfigService {
   constructor(private http: HttpClient) {}
 
   // Initialize config on startup
-  async initializeConfig(): Promise<AppConfig> {
+  async initializeConfig(): Promise<AppConfig | null> {
     if (this.config) {
       return this.config;
     }
@@ -44,7 +44,7 @@ export class ConfigService {
     }
 
     // Set the backend URL in AuthService if provided
-    if (this.config.backendUrl) {
+    if (this.config && this.config.backendUrl) {
       AuthService.setBackendUrl(this.config.backendUrl);
       console.log('Config initialized with backend URL:', this.config.backendUrl);
     }
