@@ -9,8 +9,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+// Middleware to parse JSON bodies - MUST be BEFORE API proxy!
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // API proxy middleware - MUST be BEFORE static files!
 app.use('/api', async (req, res) => {
@@ -18,7 +19,8 @@ app.use('/api', async (req, res) => {
     // Construct the backend URL correctly
     const backendUrl = `${BACKEND_URL}${req.originalUrl}`;
     
-    console.log(`[PROXY] ${req.method} ${req.originalUrl} → ${backendUrl}`);
+    console.log(`[PROXY] ${req.method} ${req.originalUrl}`);
+    console.log(`[PROXY] URL: ${backendUrl}`);
     
     const fetchOptions = {
       method: req.method,
@@ -33,9 +35,15 @@ app.use('/api', async (req, res) => {
     };
 
     // Add body for POST/PUT/PATCH requests
-    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
-      fetchOptions.body = JSON.stringify(req.body);
-      fetchOptions.headers['Content-Type'] = 'application/json';
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      if (req.body && Object.keys(req.body).length > 0) {
+        const bodyString = JSON.stringify(req.body);
+        fetchOptions.body = bodyString;
+        fetchOptions.headers['Content-Type'] = 'application/json';
+        console.log(`[PROXY] Request Body: ${bodyString}`);
+      } else {
+        console.log(`[PROXY] No request body`);
+      }
     }
 
     const response = await fetch(backendUrl, fetchOptions);
@@ -66,7 +74,7 @@ app.use(express.static(distPath));
 // Fallback to index.html for Angular routing (MUST be LAST!)
 app.get('*', (req, res) => {
   const indexPath = path.join(distPath, 'index.html');
-  console.log(`[STATIC] Serving ${req.path} → ${indexPath}`);
+  console.log(`[STATIC] Serving ${req.path}`);
   res.sendFile(indexPath);
 });
 
