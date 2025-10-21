@@ -224,3 +224,104 @@ ng serve --port 4300
 ---
 
 Viel Erfolg bei der Entwicklung! 🚀
+
+## Railway Deployment Guide
+
+### 📋 Prerequisites
+- Railway account with project set up
+- Backend service connected to `/backend` directory
+- Frontend service connected to `/frontend` directory
+- Both services successfully building
+
+### 🚀 Deployment Steps
+
+#### Step 1: Generate Backend Domain
+1. Go to Railway Dashboard
+2. Click on your **Backend** service
+3. Go to **Settings** tab
+4. Under **Public Networking**, click **"Generate Domain"**
+5. Note the generated domain: `https://backend-production-xxx.up.railway.app`
+
+#### Step 2: Generate Frontend Domain
+1. Go to your **Frontend** service in Railway
+2. Go to **Settings** tab
+3. Under **Public Networking**, click **"Generate Domain"**
+4. Note the generated domain: `https://frontend-production-xxx.up.railway.app`
+
+#### Step 3: Configure Discord OAuth Settings
+**In your Discord Developer Portal:**
+1. Go to your Application Settings
+2. Under **OAuth2 → Redirects**, add:
+   - `https://backend-production-xxx.up.railway.app/api/auth/discord/callback`
+   - Keep your local dev one: `http://localhost:3000/api/auth/discord/callback`
+
+#### Step 4: Set Backend Environment Variables
+In Railway Dashboard, go to **Backend** service → **Variables** tab:
+
+```
+MONGO_URI=<your_mongodb_connection_string>
+JWT_SECRET=<your_jwt_secret_or_generate_new>
+DISCORD_CLIENT_ID=<your_discord_client_id>
+DISCORD_CLIENT_SECRET=<your_discord_client_secret>
+DISCORD_REDIRECT_URI=https://backend-production-xxx.up.railway.app/api/auth/discord/callback
+FRONTEND_URL=https://frontend-production-xxx.up.railway.app
+NODE_ENV=production
+PORT=3000
+```
+
+#### Step 5: Set Frontend Environment Variables
+In Railway Dashboard, go to **Frontend** service → **Variables** tab:
+
+```
+BACKEND_URL=https://backend-production-xxx.up.railway.app
+ENVIRONMENT=production
+```
+
+*Alternative: If your services are on the same Railway network, you can use the internal URL:*
+```
+BACKEND_URL=http://backend.railway.internal/api
+```
+
+#### Step 6: Verify CORS Configuration
+The backend automatically allows:
+- Frontend URL from `FRONTEND_URL` env variable
+- Local development URLs
+- Requests without origin (for server-to-server)
+
+### ✅ Testing Your Deployment
+
+1. **Test Health Check:**
+   ```
+   https://backend-production-xxx.up.railway.app/api/health
+   ```
+   Should return: `{ "status": "Server is running" }`
+
+2. **Test Frontend:** 
+   Open `https://frontend-production-xxx.up.railway.app` in browser
+
+3. **Test Discord Login:**
+   - Click "Login with Discord" button
+   - If redirected to Discord login, the connection works!
+   - Check browser console for any errors
+
+### 🔍 Troubleshooting
+
+**Error: "Failed to initiate Discord login: Unknown Error"**
+- Check backend is running: `https://backend-production-xxx.up.railway.app/api/health`
+- Verify `DISCORD_REDIRECT_URI` is correct in Railway variables
+- Check CORS settings in backend logs
+
+**Error: "Discord redirect_uri_mismatch"**
+- Your `DISCORD_REDIRECT_URI` doesn't match Discord OAuth settings
+- Go to Discord Developer Portal and verify the redirect URL
+
+**Frontend shows "Unknown Error"**
+- Open browser console (F12)
+- Check if API calls are going to correct backend URL
+- Check backend service logs in Railway
+
+### 📝 Local Development (still works!)
+
+When running locally, the auth service automatically detects `localhost` and uses:
+- Backend: `http://localhost:3000/api`
+- No changes needed to run locally!

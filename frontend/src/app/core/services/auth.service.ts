@@ -15,13 +15,46 @@ export class AuthService {
 
   private tokenKey = 'fastpass_token';
   
-  // Set backend URL explicitly
-  private apiUrl = 'http://localhost:3000/api';
+  // Dynamically set backend URL based on environment
+  private apiUrl = this.getBackendUrl();
   private isLoadingUser = false;
 
   constructor(private http: HttpClient) {
-    // Don't call checkToken here - it will be called from AppComponent
-    console.log('AuthService initialized');
+    console.log('AuthService initialized with API URL:', this.apiUrl);
+  }
+
+  // Get backend URL - works for both local dev and Railway
+  private getBackendUrl(): string {
+    // For production (Railway), use relative URLs or full URL from env
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      
+      // If we're in production on Railway, backend will be on same origin path or different domain
+      // First try: check if there's a BACKEND_URL in localStorage (could be set from config)
+      const storedBackendUrl = sessionStorage.getItem('backendUrl');
+      if (storedBackendUrl) {
+        return storedBackendUrl;
+      }
+      
+      // Default behavior:
+      // - Local dev: http://localhost:3000/api
+      // - Railway: use same domain structure or relative path
+      if (origin.includes('localhost')) {
+        return 'http://localhost:3000/api';
+      } else {
+        // On Railway production, try relative API calls first
+        return '/api';
+      }
+    }
+    
+    return '/api';
+  }
+
+  // Static method to set backend URL programmatically (useful for dynamic config)
+  static setBackendUrl(url: string) {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('backendUrl', url);
+    }
   }
 
   // Check if user has valid token and load profile

@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap, firstValueFrom } from 'rxjs/operators';
+import { AuthService } from './auth.service';
+
+export interface AppConfig {
+  backendUrl: string;
+  environment: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -13,10 +19,62 @@ export class ConfigService {
   private userConfigsSubject = new BehaviorSubject<any[]>([]);
   public userConfigs$ = this.userConfigsSubject.asObservable();
 
-  // Set backend URL explicitly
-  private apiUrl = 'http://localhost:3000/api';
+  private config: AppConfig | null = null;
+  
+  // Dynamic backend URL based on environment
+  private apiUrl = this.getBackendUrl();
 
   constructor(private http: HttpClient) {}
+
+  // Initialize config on startup
+  async initializeConfig(): Promise<AppConfig> {
+    if (this.config) {
+      return this.config;
+    }
+
+    try {
+      // Try to load from assets/config.json (can be configured for different environments)
+      this.config = await firstValueFrom(this.http.get<AppConfig>('assets/config.json'));
+    } catch (error) {
+      console.warn('Config file not found, using defaults');
+      this.config = {
+        backendUrl: this.getBackendUrl(),
+        environment: this.getEnvironment()
+      };
+    }
+
+    // Set the backend URL in AuthService if provided
+    if (this.config.backendUrl) {
+      AuthService.setBackendUrl(this.config.backendUrl);
+      console.log('Config initialized with backend URL:', this.config.backendUrl);
+    }
+
+    // Update API URL
+    this.apiUrl = this.getBackendUrl();
+
+    return this.config;
+  }
+
+  private getBackendUrl(): string {
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      
+      if (origin.includes('localhost')) {
+        return 'http://localhost:3000/api';
+      } else {
+        // Production - use relative path (same domain)
+        return '/api';
+      }
+    }
+    return '/api';
+  }
+
+  private getEnvironment(): string {
+    if (typeof window !== 'undefined') {
+      return window.location.hostname.includes('localhost') ? 'development' : 'production';
+    }
+    return 'production';
+  }
 
   // Get all platforms
   getPlatforms(category?: string, country?: string): Observable<any[]> {
@@ -101,5 +159,18 @@ export class ConfigService {
         this.userConfigsSubject.next([...configs]);
       })
     );
+  }
+
+  // Getter methods for config
+  getConfig(): AppConfig | null {
+    return this.config;
+  }
+
+  getBackendUrlConfig(): string {
+    return this.config?.backendUrl || this.getBackendUrl();
+  }
+
+  getEnvironmentConfig(): string {
+    return this.config?.environment || this.getEnvironment();
   }
 }

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
+import { ConfigService } from './core/services/config.service';
 
 @Component({
   selector: 'app-root',
@@ -14,17 +15,21 @@ export class AppComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private configService: ConfigService,
     private router: Router
   ) {}
 
   ngOnInit() {
+    // Initialize config first (sets up backend URL)
+    this.configService.initializeConfig().then(() => {
+      // Then check for existing token
+      this.authService.checkToken();
+    });
+
     this.authService.currentUser$.subscribe(user => {
       this.isLoggedIn = !!user;
       this.currentUser = user;
     });
-
-    // Check token on init
-    this.authService.checkToken();
   }
 
   logout() {
