@@ -20,22 +20,31 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Improved CORS configuration for local dev and Railway production
+const frontendUrl = process.env.FRONTEND_URL;
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:4200',
-  'http://localhost:4200',
-  'http://localhost:3000',
+  frontendUrl,  // Railway production frontend
+  'http://localhost:4200',  // Local dev Angular
+  'http://localhost:3000',  // Local dev backend
   // Add any other allowed origins here
-].filter(url => url); // Remove duplicates
+].filter(url => url); // Remove empty/undefined entries
+
+console.log('✅ CORS Configuration:');
+console.log('   Allowed Origins:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or server requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ CORS: Request without origin (allowed)');
+      return callback(null, true);
+    }
     
     if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS: Origin allowed: ${origin}`);
       callback(null, true);
     } else {
-      console.warn(`CORS blocked origin: ${origin}`);
+      console.warn(`❌ CORS blocked origin: ${origin}`);
+      console.warn(`   Expected one of: ${allowedOrigins.join(', ')}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
